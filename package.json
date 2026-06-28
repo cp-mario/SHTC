@@ -36,7 +36,8 @@
     ".gitignore",
     "LICENSE",
     "README.md",
-    "icon.svg"
+    "icon.svg",
+    "bin/"
   ],
   "engines": {
     "node": ">=20.0.0"
