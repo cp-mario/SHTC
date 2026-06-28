@@ -1,26 +1,24 @@
-name: Publish to npm with version tagging
+name: Publish to npm with version tagging (OIDC)
 
 on:
-  # Trigger when tags are pushed (for official releases)
   push:
     tags:
       - 'v*'
-  
-  # Trigger on commits for experimental versions
   push:
     branches:
       - 'main'
-
-  # Manual trigger for testing
   workflow_dispatch:
 
 jobs:
   publish-official:
-    # Only run for official tag pushes
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     environment: production
-    
+
+    permissions:
+      id-token: write
+      contents: read
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -48,10 +46,8 @@ jobs:
       - name: Run tests
         run: npm test
       
-      - name: Publish to npm
-        run: npm publish --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - name: Publish to npm using OIDC
+        run: npm publish --access public --provenance
       
       - name: Create GitHub Release
         uses: actions/create-release@v1
@@ -72,10 +68,13 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   publish-experimental:
-    # Only run for commits to main branch
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     environment: development
+
+    permissions:
+      id-token: write
+      contents: read
     
     steps:
       - name: Checkout code
@@ -114,10 +113,8 @@ jobs:
       - name: Build package
         run: npm run build
       
-      - name: Publish experimental version
-        run: npm publish --access public --tag experimental
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - name: Publish experimental version using OIDC
+        run: npm publish --access public --tag experimental --provenance
       
       - name: Create experimental release
         uses: actions/create-release@v1
@@ -145,11 +142,9 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       
-      - name: Update experimental version in package.json
-        run: |
-          # Reset version to original
-          git checkout -- package.json
-      
+      - name: Reset package.json version
+        run: git checkout -- package.json
+
   cleanup:
     runs-on: ubuntu-latest
     if: always()
