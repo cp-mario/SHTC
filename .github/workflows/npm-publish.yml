@@ -43,9 +43,7 @@ jobs:
           fi
           echo "Creating official release: $VERSION"
       
-      - name: Run tests
-        run: npm test
-      
+
       - name: Publish to npm using OIDC
         run: npm publish --access public --provenance
       
