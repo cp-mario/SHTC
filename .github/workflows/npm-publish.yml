@@ -136,33 +136,13 @@ jobs:
       - name: Publish experimental version using OIDC
         run: npm publish --access public --tag experimental --provenance
       
-      - name: Create experimental release
-        uses: actions/create-release@v1
-        with:
-          tag_name: experimental-${{ steps.exp_version.outputs.experimental_version }}-${{ steps.commit_info.outputs.commit_count }}-${{ steps.commit_info.outputs.commit_date }}
-          release_name: experimental-${{ steps.exp_version.outputs.experimental_version }}-${{ steps.commit_info.outputs.commit_count }}-${{ steps.commit_info.outputs.commit_date }}
-          body: |
-            ## Experimental Version
-            
-            This is an experimental build created automatically from commit #${{ steps.commit_info.outputs.commit_count }} on ${{ steps.commit_info.outputs.commit_date }}.
-            
-            ### Version Info
-            - Latest npm version: ${{ steps.commit_info.outputs.latest_version }}
-            - Experimental version: ${{ steps.exp_version.outputs.experimental_version }}
-            - Commit: #${{ steps.commit_info.outputs.commit_count }}
-            - Date: ${{ steps.commit_info.outputs.commit_date }}
-            
-            ### Usage
-            Install with: \`npm install @mariocp/shtc@experimental\`
-            
-            ### Important Notes
-            - Experimental versions may contain bugs
-            - Not intended for production use
-            - Version follows: official_version.patch+1
-          draft: false
-          prerelease: true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Output experimental reference
+        run: |
+          echo "Experimental version published: ${{ steps.exp_version.outputs.experimental_version }}"
+          echo "Commit SHA: ${{ github.sha }}"
+          echo "Commit short: ${{ github.sha_short }}"
+          echo "Install with: npm install @mariocp/shtc@experimental"
+          echo "Reference: https://github.com/${{ github.repository }}/commit/${{ github.sha }}"
       
       - name: Reset package.json version
         run: git checkout -- package.json
