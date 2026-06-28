@@ -606,13 +606,13 @@ function printHelp() {
     shtc <command> [options]
 
   Commands:
-    build             Build the project (default)
+    build             Build the project
     serve             Start dev server with live reload
     dev               Alias for serve
-    init [directory]  Scaffold a new SHTC project
+    init [directory]  Scaffold a new SHTC project (The directory is optional, if its blank it will use the terminal location)
 
   Options:
-    -h, --help        Show this help message
+    -h, --help        Show this help message (default)
     -v, --version     Show version number
     --port <port>     Port for dev server (default: 3000)
     --host <host>     Host for dev server (default: localhost)
@@ -637,10 +637,9 @@ function cli(argv) {
     const args = argv.slice(2);
 
     // ── Help / Version ───────────────────────────────────────────────────────
-    if (args.length === 0 || args[0] === 'build') {
-        // build is the default command
-        const opts = parseBuildOptions(args.slice(1));
-        build(opts).catch(err => console.error(`[SHTC] Error: ${err.message}`));
+    if (args.length === 0) {
+        // Default to help when no arguments
+        printHelp();
         return;
     }
 
@@ -651,6 +650,12 @@ function cli(argv) {
 
     if (args[0] === '--version' || args[0] === '-v') {
         console.log(PKG_VERSION);
+        return;
+    }
+
+    if (args[0] === 'build') {
+        const opts = parseBuildOptions(args.slice(1));
+        build(opts).catch(err => console.error(`[SHTC] Error: ${err.message}`));
         return;
     }
 
