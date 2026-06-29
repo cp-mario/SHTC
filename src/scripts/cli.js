@@ -10,6 +10,7 @@ import { serve } from './server.js';
 import { initProject } from './init.js';
 import { PKG_VERSION } from './package.js';
 import { runtime, runtimeVersion } from './runtime.js';
+import { red } from './color.js';
 
 /** Human-readable runtime label for display (e.g. "Node v24.6.0", "Bun 1.2.3") */
 const runtimeLabel =
@@ -52,6 +53,13 @@ function printHelp() {
     roxul init my-project -noExample
     roxul --help
 `);
+}
+
+/** Print version, runtime, and working-directory banner */
+function printBanner() {
+    console.log(`  roxul v${PKG_VERSION} — running in ${runtimeLabel}`);
+    console.log(`  Working directory: ${process.cwd()}`);
+    console.log('');
 }
 
 /**
@@ -139,8 +147,9 @@ export function cli(argv) {
     }
 
     if (args[0] === 'build') {
+        printBanner();
         const opts = parseBuildOptions(args.slice(1));
-        build(opts).catch((err) => console.error(`[roxul] Error: ${err.message}`));
+        build(opts).catch((err) => console.error(`  ${red('✘')} ${err.message}`));
         return;
     }
 
@@ -148,12 +157,14 @@ export function cli(argv) {
     const cmd = args[0];
 
     if (cmd === 'serve' || cmd === 'dev') {
+        printBanner();
         const opts = parseServeOptions(args.slice(1));
-        serve(opts).catch((err) => console.error(`[roxul] Error: ${err.message}`));
+        serve(opts).catch((err) => console.error(`  ${red('✘')} ${err.message}`));
         return;
     }
 
     if (cmd === 'init') {
+        printBanner();
         const dir       = args[1] || process.cwd();
         const force     = args.includes('--force');
         const noExample = args.includes('-noExample');
@@ -162,7 +173,7 @@ export function cli(argv) {
     }
 
     // ── Unknown command ──────────────────────────────────────────────────────
-    console.error(`\n  ❌ Unknown command: "${cmd}"\n`);
+    console.error(`\n  ${red('✘')} Unknown command: "${cmd}"\n`);
     printHelp();
     process.exit(1);
 }

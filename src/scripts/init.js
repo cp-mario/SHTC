@@ -7,6 +7,7 @@
 
 import { join, resolve, relative, dirname, readFileSync, readdirSync, writeFileSync, mkdirSync, existsSync } from './runtime.js';
 import { PACKAGE_ROOT } from './package.js';
+import { bold, green, yellow, cyan, dim } from './color.js';
 
 /**
  * Load init templates from the defaultProject folder shipped with roxul.
@@ -61,11 +62,9 @@ export function initProject(dir, opts = {}) {
     const noExample = opts.noExample || false;
 
     log.info('');
-    log.info('  ╔══════════════════════════════════════╗');
-    log.info('  ║   roxul — Init Project               ║');
-    log.info('  ╚══════════════════════════════════════╝');
+    log.info(`  ${bold('roxul')} — ${cyan('Init Project')}`);
     log.info('');
-    log.info(`  Scaffolding project in: ${targetDir}`);
+    log.info(`  ${cyan('Target:')} ${targetDir}`);
     log.info('');
 
     let created = 0;
@@ -77,14 +76,14 @@ export function initProject(dir, opts = {}) {
         const dirPath  = dirname(fullPath);
 
         if (existsSync(fullPath) && !force) {
-            log.info(`  ⏭️  ${filePath}  (already exists)`);
+            log.info(`  ${yellow('↻')} ${filePath}  (already exists)`);
             skipped++;
             continue;
         }
 
         if (!existsSync(dirPath)) mkdirSync(dirPath, { recursive: true });
         writeFileSync(fullPath, content, 'utf-8');
-        log.info(`  ✅  ${filePath}`);
+        log.info(`  ${green('+')} ${filePath}`);
         created++;
     }
 
@@ -102,7 +101,7 @@ export function initProject(dir, opts = {}) {
                     const targetPath = join(targetDir, relPath);
                     if (!existsSync(targetPath)) {
                         mkdirSync(targetPath, { recursive: true });
-                        log.info(`  📁  ${relPath}/`);
+                        log.info(`  ${dim('+')} ${dim(relPath + '/')}`);
                     }
                     ensureEmptyDirs(fullPath);
                 }
@@ -116,7 +115,7 @@ export function initProject(dir, opts = {}) {
                 const targetPath = join(targetDir, dirName);
                 if (!existsSync(targetPath)) {
                     mkdirSync(targetPath, { recursive: true });
-                    log.info(`  📁  ${dirName}/`);
+                    log.info(`  ${dim('+')} ${dim(dirName + '/')}`);
                 }
                 ensureEmptyDirs(srcDir);
             }
@@ -125,8 +124,8 @@ export function initProject(dir, opts = {}) {
 
     log.info('');
     log.info(
-        `  Created ${created} file(s)` +
-            (skipped > 0 ? ` (${skipped} skipped)` : ''),
+        `  ${green(`Created ${created} file(s)`)}` +
+            (skipped > 0 ? ` ${yellow(`(${skipped} skipped)`)}` : ''),
     );
     log.info('');
     log.info('  Next steps:');

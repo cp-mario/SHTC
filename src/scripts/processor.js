@@ -9,6 +9,7 @@ import { readFileSync, readdirSync, writeFileSync, copyFileSync, existsSync, mkd
 import { MAX_COMPONENT_DEPTH } from './constants.js';
 import { resolveComponentPath } from './resolver.js';
 import { findComponentTags } from './parser.js';
+import { dim, cyan } from './color.js';
 
 /**
  * Process an HTML string: resolve all <component> tags recursively.
@@ -112,8 +113,9 @@ export function processHtml(html, projectRoot, depth = 0, log = null) {
         result = result.slice(0, start) + indentedContent + result.slice(end);
 
         if (logger.info) {
-            const indent = '  '.repeat(depth + 1);
-            logger.info(`${indent}├─ ${relative(projectRoot, resolved.path)}`);
+            const indent = '  '.repeat(depth + 2);
+            const compPath = relative(projectRoot, resolved.path).replace(/\\/g, '/');
+            logger.info(`${indent}${dim('└──')} ${dim(compPath)}`);
         }
     }
 
@@ -138,18 +140,22 @@ export function processDirectory(rootDir, currentDir, outputDir, projectRoot, lo
         return;
     }
 
-    for (const entry of entries) {
+    for (let i = 0; i < entries.length; i++) {
+        const entry      = entries[i];
+        const isLast     = i === entries.length - 1;
+        const treePrefix = isLast ? '└── ' : '├── ';
         const fullPath     = join(currentDir, entry.name);
-        const relativePath = relative(rootDir, fullPath);
+        const relativePath = relative(rootDir, fullPath).replace(/\\/g, '/');
         const outputPath   = join(outputDir, relativePath);
 
         if (entry.isDirectory()) {
+            log.info(`  ${treePrefix}${cyan(entry.name + '/')}`);
             if (!existsSync(outputPath)) {
                 mkdirSync(outputPath, { recursive: true });
             }
             processDirectory(rootDir, fullPath, outputDir, projectRoot, log);
         } else if (entry.isFile() && /\.html?$/i.test(entry.name)) {
-            log.info(`  ${'  '.repeat(1)}📄 ${relativePath}`);
+            log.info(`  ${treePrefix}${relativePath}`);
             try {
                 const html      = readFileSync(fullPath, 'utf-8');
                 const processed = processHtml(html, projectRoot, 0, log);

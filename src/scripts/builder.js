@@ -8,6 +8,7 @@
 import { resolve, existsSync, rmSync, mkdirSync } from './runtime.js';
 import { loadConfig } from './config.js';
 import { processDirectory } from './processor.js';
+import { bold, green, yellow, cyan } from './color.js';
 
 /**
  * Run a full roxul build.
@@ -31,20 +32,17 @@ export async function build(opts = {}) {
 
     // ── Header ───────────────────────────────────────────────────────────────
     log.info('');
-    log.info('  ╔══════════════════════════════════════╗');
-    log.info('  ║   roxul                              ║');
-    log.info('  ║   Static site generator (build-time) ║');
-    log.info('  ╚══════════════════════════════════════╝');
+    log.info(`  ${bold('roxul')} — ${green('Static site generator')}`);
     log.info('');
-    log.info(`  Input:   ${inputDir}`);
-    log.info(`  Output:  ${outputDir}`);
-    if (config.configPath) log.info(`  Config:  ${config.configPath}`);
+    log.info(`  ${cyan('Input:')}   ${inputDir}`);
+    log.info(`  ${cyan('Output:')}  ${outputDir}`);
+    if (config.configPath) log.info(`  ${cyan('Config:')}  ${config.configPath}`);
     log.info('');
 
     // ── Validate ─────────────────────────────────────────────────────────────
     if (!existsSync(inputDir)) {
-        log.warn(`[roxul] Input directory does not exist: ${inputDir}`);
-        log.warn('       Create it or change "input" in config.cfg');
+        log.warn(`  ${yellow('!')} Input directory does not exist: ${inputDir}`);
+        log.warn(`    Create it or change "input" in config.cfg`);
         return { inputDir, outputDir };
     }
 
@@ -63,8 +61,8 @@ export async function build(opts = {}) {
     processDirectory(inputDir, inputDir, outputDir, baseRoot, log);
 
     log.info('');
-    log.info('  ✨ Build complete!');
-    log.info(`  Output: ${outputDir}`);
+    log.info(`  ${green('✔')} ${bold('Build complete!')}`);
+    log.info(`  ${cyan('Output:')} ${outputDir}`);
     log.info('');
 
     return { inputDir, outputDir };

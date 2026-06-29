@@ -10,6 +10,7 @@ import { loadConfig } from './config.js';
 import { build } from './builder.js';
 import { processDirectory } from './processor.js';
 import { MIME_TYPES } from './constants.js';
+import { bold, green, yellow, cyan } from './color.js';
 
 /**
  * Get MIME type for a file path.
@@ -45,9 +46,7 @@ export async function serve(opts = {}) {
 
     // ── Initial build ────────────────────────────────────────────────────────
     log.info('');
-    log.info('  ╔══════════════════════════════════════╗');
-    log.info('  ║   roxul — Dev Server                 ║');
-    log.info('  ╚══════════════════════════════════════╝');
+    log.info(`  ${bold('roxul')} — ${cyan('Dev Server')}`);
     log.info('');
 
     await build({ input: inputDir, output: outputDir, root: baseRoot, clean: true, log });
@@ -59,7 +58,7 @@ export async function serve(opts = {}) {
     function rebuild() {
         if (rebuildTimer) clearTimeout(rebuildTimer);
         rebuildTimer = setTimeout(() => {
-            log.info('  🔄 Change detected, rebuilding...');
+            log.info(`  ${yellow('↻')} Change detected, rebuilding...`);
             try {
                 // Clean rebuild
                 if (existsSync(outputDir)) {
@@ -76,9 +75,9 @@ export async function serve(opts = {}) {
                         clients.delete(res);
                     }
                 }
-                log.info('  ✅ Rebuild complete, reloading browsers.\n');
+                log.info(`  ${green('✔')} Rebuild complete, reloading browsers.\n`);
             } catch (err) {
-                log.warn(`  ⚠️ Rebuild error: ${err.message}`);
+                log.warn(`  ${yellow('!')} Rebuild error: ${err.message}`);
             }
         }, 200);
     }
@@ -174,8 +173,8 @@ export async function serve(opts = {}) {
     });
 
     server.listen(port, host, () => {
-        log.info(`  🌐 Server running at http://${host}:${port}/`);
-        log.info('  📁 Watching for changes...');
+        log.info(`  ${cyan('Server:')} http://${host}:${port}/`);
+        log.info(`  ${cyan('Watch:')}  ${inputDir}`);
         log.info('');
     });
 
