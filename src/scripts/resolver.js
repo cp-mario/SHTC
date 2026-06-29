@@ -5,9 +5,30 @@
  * by searching through a well-defined list of locations.
  */
 
-import { join, sep, existsSync, statSync } from './runtime.js';
+import { join, resolve, sep, existsSync, statSync } from './runtime.js';
 import { COMPONENT_EXTENSIONS } from './constants.js';
 import { PACKAGE_ROOT } from './package.js';
+
+/**
+ * Normalize a candidate path and verify it is contained within one of the
+ * allowed root directories. Returns the normalized path if safe, or null if
+ * the path escapes the allowed roots (path traversal attempt).
+ *
+ * @param {string} candidate - Raw candidate path (as constructed by join)
+ * @param {string[]} allowedRoots - List of absolute directory paths that are
+ *                                  considered safe base directories
+ * @returns {string|null}
+ */
+function checkPathContainment(candidate, allowedRoots) {
+    const normalized = resolve(candidate);
+    for (const root of allowedRoots) {
+        const normalizedRoot = resolve(root);
+        if (normalized.startsWith(normalizedRoot + sep) || normalized === normalizedRoot) {
+            return normalized;
+        }
+    }
+    return null;
+}
 
 /**
  * Resolve a component src attribute to the first existing file.
@@ -22,7 +43,10 @@ import { PACKAGE_ROOT } from './package.js';
  * @returns {{ path: string|null, searchLocations: string[] }}
  */
 export function resolveComponentPath(src, projectRoot) {
-    // Basic path-traversal guard
+    // ── Security: Path-traversal guard ───────────────────────────────────
+    // Reject any src containing parent-directory references ("..") or
+    // absolute paths ("/" or "\") to prevent escaping the project root via
+    // the component resolution mechanism.
     if (src.includes('..') || src.startsWith('/') || src.startsWith('\\')) {
         return { path: null, searchLocations: [] };
     }
@@ -52,8 +76,16 @@ export function resolveComponentPath(src, projectRoot) {
     }
 
     for (const loc of searchLocations) {
-        if (existsSync(loc) && statSync(loc).isFile()) {
-            return { path: loc, searchLocations };
+        // ── Security: Defense-in-depth containment check ──────────────────
+        // Normalize the candidate path and verify it resides within one of
+        // the allowed root directories (projectRoot or PACKAGE_ROOT). This
+        // catches any edge-case where the construction above could produce
+        // a path that escapes the intended base.
+        const safePath = checkPathContainment(loc, [projectRoot, PACKAGE_ROOT]);
+        if (!safePath) continue;
+
+        if (existsSync(safePath) && statSync(safePath).isFile()) {
+            return { path: safePath, searchLocations };
         }
     }
     return { path: null, searchLocations };

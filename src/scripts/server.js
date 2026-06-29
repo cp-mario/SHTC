@@ -5,7 +5,7 @@
  * Watches the source directory for changes and triggers automatic rebuilds.
  */
 
-import { createServer, join, resolve, extname, statSync, readFileSync, existsSync, rmSync, mkdirSync, watch } from './runtime.js';
+import { createServer, join, resolve, extname, statSync, readFileSync, existsSync, rmSync, mkdirSync, watch, sep } from './runtime.js';
 import { loadConfig } from './config.js';
 import { build } from './builder.js';
 import { processDirectory } from './processor.js';
@@ -123,7 +123,20 @@ export async function serve(opts = {}) {
         let urlPath = req.url.split('?')[0];
         if (urlPath === '/') urlPath = '/index.html';
 
-        const filePath = join(outputDir, urlPath);
+        // ── Security: Path traversal prevention ──────────────────────────
+        // Decode URL-encoded characters (e.g. %2e%2e%2f → ../) then
+        // normalize the resolved path and verify it stays within outputDir
+        // so a malicious request like GET /../config.cfg cannot read files
+        // outside the intended output directory.
+        const decodedPath = decodeURIComponent(urlPath);
+        const filePath = resolve(join(outputDir, decodedPath));
+
+        if (!filePath.startsWith(outputDir + sep)) {
+            res.writeHead(403);
+            res.end('Forbidden');
+            return;
+        }
+        // ─────────────────────────────────────────────────────────────────
 
         try {
             const stats = statSync(filePath);
