@@ -12,9 +12,9 @@
   "author": "mariocp",
   "type": "module",
   "bin": {
-    "roxul": "cli.js"
+    "roxul": "node cli.js"
   },
-  "main": "cli.js",
+  "main": "node cli.js",
   "scripts": {
     "build": "node cli.js build",
     "serve": "node cli.js serve",
