@@ -5,8 +5,7 @@
  * and walking the source tree to produce the final site.
  */
 
-import { resolve } from 'node:path';
-import { existsSync, rmSync, mkdirSync } from 'node:fs';
+import { resolve, existsSync, rmSync, mkdirSync } from './runtime.js';
 import { loadConfig } from './config.js';
 import { processDirectory } from './processor.js';
 

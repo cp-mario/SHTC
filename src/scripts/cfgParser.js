@@ -11,8 +11,7 @@
  *   Empty lines are ignored
  */
 
-import { readFileSync, existsSync } from 'node:fs';
-import { join } from 'node:path';
+import { readFileSync, existsSync, join } from './runtime.js';
 
 /**
  * Parse raw config text into a configuration object.

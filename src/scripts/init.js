@@ -5,11 +5,7 @@
  * shipped `src/defaultProject/` directory into the target location.
  */
 
-import { join, resolve, relative, dirname } from 'node:path';
-import {
-    readFileSync, readdirSync, writeFileSync,
-    mkdirSync, existsSync,
-} from 'node:fs';
+import { join, resolve, relative, dirname, readFileSync, readdirSync, writeFileSync, mkdirSync, existsSync } from './runtime.js';
 import { PACKAGE_ROOT } from './package.js';
 
 /**
@@ -17,9 +13,11 @@ import { PACKAGE_ROOT } from './package.js';
  *
  * Returns a flat map of relative paths (using forward slashes) to file contents.
  *
+ * @param {object} [opts]
+ * @param {boolean} [opts.noExample] - Skip example files inside components/ and src/
  * @returns {Object.<string, string>}
  */
-function getInitTemplates() {
+function getInitTemplates(opts = {}) {
     const templateRoot = join(PACKAGE_ROOT, 'src', 'defaultProject');
     const templates = {};
 
@@ -31,6 +29,10 @@ function getInitTemplates() {
                 walk(fullPath);
             } else if (entry.isFile()) {
                 const relPath = relative(templateRoot, fullPath).replace(/\\/g, '/');
+                // Skip example files inside components/ or src/ when --noExample is set
+                if (opts.noExample && (relPath.startsWith('components/') || relPath.startsWith('src/'))) {
+                    continue;
+                }
                 const content = readFileSync(fullPath, 'utf-8');
                 templates[relPath] = content;
             }
@@ -48,13 +50,15 @@ function getInitTemplates() {
  *
  * @param {string} dir      - Target directory (default: process.cwd())
  * @param {object} [opts]
- * @param {boolean} [opts.force] - Overwrite existing files (default: false)
- * @param {object}  [opts.log]   - Logger (default: console)
+ * @param {boolean} [opts.force]     - Overwrite existing files (default: false)
+ * @param {boolean} [opts.noExample] - Skip example files inside components/ and src/
+ * @param {object}  [opts.log]       - Logger (default: console)
  */
 export function initProject(dir, opts = {}) {
     const targetDir = resolve(dir || process.cwd());
     const log       = opts.log || console;
     const force     = opts.force || false;
+    const noExample = opts.noExample || false;
 
     log.info('');
     log.info('  ╔══════════════════════════════════════╗');
@@ -67,7 +71,7 @@ export function initProject(dir, opts = {}) {
     let created = 0;
     let skipped = 0;
 
-    const templates = getInitTemplates();
+    const templates = getInitTemplates({ noExample });
     for (const [filePath, content] of Object.entries(templates)) {
         const fullPath = join(targetDir, filePath);
         const dirPath  = dirname(fullPath);
@@ -82,6 +86,41 @@ export function initProject(dir, opts = {}) {
         writeFileSync(fullPath, content, 'utf-8');
         log.info(`  ✅  ${filePath}`);
         created++;
+    }
+
+    // When --noExample is set, create empty components/ and src/ directories
+    // (and any subdirectories found in the template) so the project structure
+    // is ready without example files.
+    if (noExample) {
+        const templateRoot = join(PACKAGE_ROOT, 'src', 'defaultProject');
+        function ensureEmptyDirs(dir) {
+            const entries = readdirSync(dir, { withFileTypes: true });
+            for (const entry of entries) {
+                const fullPath = join(dir, entry.name);
+                if (entry.isDirectory()) {
+                    const relPath = relative(templateRoot, fullPath).replace(/\\/g, '/');
+                    const targetPath = join(targetDir, relPath);
+                    if (!existsSync(targetPath)) {
+                        mkdirSync(targetPath, { recursive: true });
+                        log.info(`  📁  ${relPath}/`);
+                    }
+                    ensureEmptyDirs(fullPath);
+                }
+            }
+        }
+        // Only create directories that are inside components/ or src/
+        const topDirs = ['components', 'src'];
+        for (const dirName of topDirs) {
+            const srcDir = join(templateRoot, dirName);
+            if (existsSync(srcDir)) {
+                const targetPath = join(targetDir, dirName);
+                if (!existsSync(targetPath)) {
+                    mkdirSync(targetPath, { recursive: true });
+                    log.info(`  📁  ${dirName}/`);
+                }
+                ensureEmptyDirs(srcDir);
+            }
+        }
     }
 
     log.info('');

@@ -5,9 +5,7 @@
  * Watches the source directory for changes and triggers automatic rebuilds.
  */
 
-import { createServer } from 'node:http';
-import { join, resolve, extname } from 'node:path';
-import { statSync, readFileSync, existsSync, rmSync, mkdirSync, watch } from 'node:fs';
+import { createServer, join, resolve, extname, statSync, readFileSync, existsSync, rmSync, mkdirSync, watch } from './runtime.js';
 import { loadConfig } from './config.js';
 import { build } from './builder.js';
 import { processDirectory } from './processor.js';

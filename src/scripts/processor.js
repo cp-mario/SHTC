@@ -5,11 +5,7 @@
  * walks the source directory tree to produce the build output.
  */
 
-import {
-    readFileSync, readdirSync, writeFileSync,
-    copyFileSync, existsSync, mkdirSync,
-} from 'node:fs';
-import { join, relative, dirname } from 'node:path';
+import { readFileSync, readdirSync, writeFileSync, copyFileSync, existsSync, mkdirSync, join, relative, dirname } from './runtime.js';
 import { MAX_COMPONENT_DEPTH } from './constants.js';
 import { resolveComponentPath } from './resolver.js';
 import { findComponentTags } from './parser.js';

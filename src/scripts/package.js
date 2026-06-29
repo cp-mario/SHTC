@@ -6,9 +6,7 @@
  * making it straightforward to override in tests.
  */
 
-import { fileURLToPath } from 'node:url';
-import { dirname, join } from 'node:path';
-import { readFileSync } from 'node:fs';
+import { fileURLToPath, dirname, join, readFileSync } from './runtime.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname   = dirname(__filename);

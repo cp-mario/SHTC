@@ -6,7 +6,7 @@
  * scaffolded default project config when none is found in the project root.
  */
 
-import { join, resolve } from 'node:path';
+import { join, resolve } from './runtime.js';
 import { findConfig } from './cfgParser.js';
 
 /**

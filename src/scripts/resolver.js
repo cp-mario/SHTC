@@ -5,8 +5,7 @@
  * by searching through a well-defined list of locations.
  */
 
-import { join, sep } from 'node:path';
-import { existsSync, statSync } from 'node:fs';
+import { join, sep, existsSync, statSync } from './runtime.js';
 import { COMPONENT_EXTENSIONS } from './constants.js';
 import { PACKAGE_ROOT } from './package.js';
 
