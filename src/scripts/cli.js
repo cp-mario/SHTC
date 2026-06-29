@@ -1,0 +1,157 @@
+/**
+ * cli.js — roxul CLI Entry Point
+ *
+ * Parses command-line arguments and dispatches to the appropriate
+ * sub-command (build, serve, init).
+ */
+
+import { build } from './builder.js';
+import { serve } from './server.js';
+import { initProject } from './init.js';
+import { PKG_VERSION } from './package.js';
+
+/**
+ * Print the help / usage message.
+ */
+function printHelp() {
+    console.log(`
+  roxul v${PKG_VERSION}
+
+  Usage:
+    roxul <command> [options]
+
+  Commands:
+    build             Build the project
+    serve             Start dev server with live reload
+    dev               Alias for serve
+    init [directory]  Scaffold a new roxul project (The directory is optional, if its blank it will use the terminal location)
+
+  Options:
+    -h, --help        Show this help message (default)
+    -v, --version     Show version number
+    --port <port>     Port for dev server (default: 3000)
+    --host <host>     Host for dev server (default: localhost)
+    --input <dir>     Input directory (default: src or from config)
+    --output <dir>    Output directory (default: output or from config)
+    --no-clean        Don't clean output directory before build
+    --force           Overwrite files on init
+
+  Examples:
+    roxul build
+    roxul serve --port 8080
+    roxul init my-project
+    roxul --help
+`);
+}
+
+/**
+ * Parse CLI options for the `build` command.
+ *
+ * @param {string[]} args
+ * @returns {object}
+ */
+function parseBuildOptions(args) {
+    const opts = {};
+    for (let i = 0; i < args.length; i++) {
+        switch (args[i]) {
+            case '--input':
+                opts.input = args[++i];
+                break;
+            case '--output':
+                opts.output = args[++i];
+                break;
+            case '--root':
+                opts.root = args[++i];
+                break;
+            case '--no-clean':
+                opts.clean = false;
+                break;
+        }
+    }
+    return opts;
+}
+
+/**
+ * Parse CLI options for the `serve` / `dev` command.
+ *
+ * @param {string[]} args
+ * @returns {object}
+ */
+function parseServeOptions(args) {
+    const opts = {};
+    for (let i = 0; i < args.length; i++) {
+        switch (args[i]) {
+            case '--port':
+                opts.port = parseInt(args[++i], 10);
+                break;
+            case '--host':
+                opts.host = args[++i];
+                break;
+            case '--input':
+                opts.input = args[++i];
+                break;
+            case '--output':
+                opts.output = args[++i];
+                break;
+            case '--root':
+                opts.root = args[++i];
+                break;
+            case '--open':
+                opts.open = true;
+                break;
+        }
+    }
+    return opts;
+}
+
+/**
+ * CLI entry point. Parses `process.argv` and dispatches the command.
+ *
+ * @param {string[]} argv - Typically `process.argv`
+ */
+export function cli(argv) {
+    const args = argv.slice(2);
+
+    // ── Help / Version ───────────────────────────────────────────────────────
+    if (args.length === 0) {
+        printHelp();
+        return;
+    }
+
+    if (args[0] === '--help' || args[0] === '-h') {
+        printHelp();
+        return;
+    }
+
+    if (args[0] === '--version' || args[0] === '-v') {
+        console.log(PKG_VERSION);
+        return;
+    }
+
+    if (args[0] === 'build') {
+        const opts = parseBuildOptions(args.slice(1));
+        build(opts).catch((err) => console.error(`[roxul] Error: ${err.message}`));
+        return;
+    }
+
+    // ── Commands ─────────────────────────────────────────────────────────────
+    const cmd = args[0];
+
+    if (cmd === 'serve' || cmd === 'dev') {
+        const opts = parseServeOptions(args.slice(1));
+        serve(opts).catch((err) => console.error(`[roxul] Error: ${err.message}`));
+        return;
+    }
+
+    if (cmd === 'init') {
+        const dir   = args[1] || process.cwd();
+        const force = args.includes('--force');
+        initProject(dir, { force });
+        return;
+    }
+
+    // ── Unknown command ──────────────────────────────────────────────────────
+    console.error(`\n  ❌ Unknown command: "${cmd}"\n`);
+    printHelp();
+    process.exit(1);
+}
