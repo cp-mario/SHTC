@@ -72,18 +72,20 @@ export function initProject(dir, opts = {}) {
 
     const templates = getInitTemplates({ noExample });
     for (const [filePath, content] of Object.entries(templates)) {
-        const fullPath = join(targetDir, filePath);
+        // gitIgnoreTemplate.txt → .gitignore (evita bugs con archivos que empiezan con punto)
+        const finalName = filePath === 'gitIgnoreTemplate.txt' ? '.gitignore' : filePath;
+        const fullPath = join(targetDir, finalName);
         const dirPath  = dirname(fullPath);
 
         if (existsSync(fullPath) && !force) {
-            log.info(`  ${yellow('↻')} ${filePath}  (already exists)`);
+            log.info(`  ${yellow('↻')} ${finalName}  (already exists)`);
             skipped++;
             continue;
         }
 
         if (!existsSync(dirPath)) mkdirSync(dirPath, { recursive: true });
         writeFileSync(fullPath, content, 'utf-8');
-        log.info(`  ${green('+')} ${filePath}`);
+        log.info(`  ${green('+')} ${finalName}`);
         created++;
     }
 
